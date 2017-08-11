@@ -38,7 +38,6 @@
   },
   "devDependencies": {
     "@types/amqplib": "^0.5.1",
-    "@types/async": "^2.0.38",
     "@types/bluebird": "^3.0.37",
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
@@ -66,7 +65,7 @@
     "remap-istanbul": "^0.8.4",
     "simple-mock": "^0.7.0",
     "tslint": "^4.4.2",
-    "typescript": "^2.1.5"
+    "typescript": "^2.3.4"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
