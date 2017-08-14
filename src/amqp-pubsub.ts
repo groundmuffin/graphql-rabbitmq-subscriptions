@@ -107,8 +107,8 @@ export class AmqpPubSub implements PubSubEngine {
     this.logger.trace("list of subscriptions still available '(%j)'", this.subscriptionMap);
   }
 
-	public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
-		return new PubSubAsyncIterator<T>(this, triggers);
+	public asyncIterator<T>(triggers: string | string[], options: any): AsyncIterator<T> {
+		return new PubSubAsyncIterator<T>(this, triggers, options);
 	}
 
   private onMessage(channel: string, message: string) {
