@@ -1,5 +1,5 @@
 {
-  "name": "graphql-rabbitmq-subscriptions",
+  "name": "@groundmuffin/graphql-rabbitmq-subscriptions",
   "version": "1.0.10",
   "description": "A graphql-subscriptions PubSub Engine using RabbitMQ",
   "main": "dist/index.js",
@@ -34,9 +34,10 @@
     "@types/bunyan": "^1.8.0",
     "async": "^2.0.1",
     "graphql-subscriptions": "^0.2.3",
-    "rabbitmq-pub-sub": "^0.2.5"
+    "@groundmuffin/rabbitmq-pub-sub": "^0.2.6"
   },
   "devDependencies": {
+    "@cdm-logger/server": "^3.0.1",
     "@types/amqplib": "^0.5.1",
     "@types/bluebird": "^3.0.37",
     "@types/chai": "^3.4.34",
@@ -56,7 +57,6 @@
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-stage-0": "^6.3.13",
     "bluebird": "^3.4.7",
-    "@cdm-logger/server": "^3.0.1",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "graphql": "^0.8.0 || ^0.9.0",
