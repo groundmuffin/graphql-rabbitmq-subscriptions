@@ -18,6 +18,7 @@ import { SubscriptionManager } from 'graphql-subscriptions';
 import { AmqpPubSub } from '../amqp-pubsub';
 
 const logger = ConsoleLogger.create('integration-test', { level: 'trace'});
+const config: IRabbitMqConnectionConfig = {host: '127.0.0.1', port: 5672};
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -30,62 +31,63 @@ const TEST_SUBSCRIPTION = 'testSubscription';
 const NOT_A_TRIGGER = 'NotATrigger';
 const FILTER1 = 'Filter1';
 
-const schema = new GraphQLSchema({
-  query: new GraphQLObjectType({
-    name: 'Query',
-    fields: {
-      testString: {
-        type: GraphQLString,
-        resolve: function (_, args) {
-          return 'works';
-        },
-      },
-    },
-  }),
-  subscription: new GraphQLObjectType({
-    name: 'Subscription',
-    fields: {
-      testSubscription: {
-        type: GraphQLString,
-        resolve: function (root) {
-          return root;
-        },
-      },
-      testFilter: {
-        type: GraphQLString,
-        resolve: function (root, { filterBoolean }) {
-          return filterBoolean ? 'goodFilter' : 'badFilter';
-        },
-        args: {
-          filterBoolean: { type: GraphQLBoolean },
-        },
-      },
-      testFilterMulti: {
-        type: GraphQLString,
-        resolve: function (root, { filterBoolean }) {
-          return filterBoolean ? 'goodFilter' : 'badFilter';
-        },
-        args: {
-          filterBoolean: { type: GraphQLBoolean },
-          a: { type: GraphQLString },
-          b: { type: GraphQLInt },
-        },
-      },
-      testChannelOptions: {
-        type: GraphQLString,
-        resolve: function (root) {
-          return root;
-        },
-        args: {
-          repoName: { type: GraphQLString },
-        },
-      },
-    },
-  }),
-});
-
 describe('SubscriptionManager', function () {
   this.timeout(30000);
+
+  const schema = new GraphQLSchema({
+    query: new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        testString: {
+          type: GraphQLString,
+          resolve: function (_, args) {
+            return 'works';
+          },
+        },
+      },
+    }),
+    subscription: new GraphQLObjectType({
+      name: 'Subscription',
+      fields: {
+        testSubscription: {
+          type: GraphQLString,
+          resolve: function (root) {
+            return root;
+          },
+        },
+        testFilter: {
+          type: GraphQLString,
+          resolve: function (root, { filterBoolean }) {
+            return filterBoolean ? 'goodFilter' : 'badFilter';
+          },
+          args: {
+            filterBoolean: { type: GraphQLBoolean },
+          },
+        },
+        testFilterMulti: {
+          type: GraphQLString,
+          resolve: function (root, { filterBoolean }) {
+            return filterBoolean ? 'goodFilter' : 'badFilter';
+          },
+          args: {
+            filterBoolean: { type: GraphQLBoolean },
+            a: { type: GraphQLString },
+            b: { type: GraphQLInt },
+          },
+        },
+        testChannelOptions: {
+          type: GraphQLString,
+          resolve: function (root) {
+            return root;
+          },
+          args: {
+            repoName: { type: GraphQLString },
+          },
+        },
+      },
+    }),
+  });
+
   const subManager = new SubscriptionManager({
     schema,
     setupFunctions: {
@@ -101,7 +103,7 @@ describe('SubscriptionManager', function () {
         };
       },
     },
-    pubsub: new AmqpPubSub({ logger }),
+    pubsub: new AmqpPubSub({ logger, config }),
   });
 
   it('throws an error if query is not valid', function () {
@@ -233,10 +235,12 @@ describe('SubscriptionManager', function () {
     let subscriberId;
     const callback = function (err, payload) {
       try {
-        expect(payload).to.be.undefined;
-        expect(err.message).to.equals(
-          'Variable "$uga" of required type "Boolean!" was not provided.',
-        );
+        // tslint:disable-next-line:no-unused-expression
+        expect(payload).to.exist;
+        // tslint:disable-next-line:no-unused-expression
+        expect(payload.errors).to.exist;
+        expect(payload.errors.length).to.equal(1);
+        expect(payload.errors[0].message).to.equal('Variable "$uga" of required type "Boolean!" was not provided.');
         setTimeout(() => done(), 2);
       } catch (e) {
         setTimeout(() => done(e), 2);
@@ -256,6 +260,7 @@ describe('SubscriptionManager', function () {
     const pubsub = new AmqpPubSub({
       logger,
       triggerTransform,
+      config,
     });
     let subscriberId;
     const subManager2 = new SubscriptionManager({
@@ -299,7 +304,6 @@ describe('SubscriptionManager', function () {
 
 describe('Delete Queues After tests', () => {
   it('Delete all test queues', () => {
-    const config: IRabbitMqConnectionConfig = {host: '127.0.0.1', port: 5672};
     let f = new RabbitMqConnectionFactory(logger, config);
     // let d = new DefaultQueueNameConfig('testSubscription');
     return f.create().then(c => {
