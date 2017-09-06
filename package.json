@@ -32,9 +32,8 @@
   },
   "dependencies": {
     "@types/bunyan": "^1.8.0",
-    "async": "^2.0.1",
-    "graphql-subscriptions": "^0.2.3",
     "@groundmuffin/rabbitmq-pub-sub": "^0.2.6"
+    "graphql-subscriptions": "^0.4.4"
   },
   "devDependencies": {
     "@cdm-logger/server": "^3.0.1",

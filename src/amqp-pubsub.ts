@@ -1,11 +1,10 @@
-import { PubSubEngine } from 'graphql-subscriptions/dist/pubsub';
+import { PubSubEngine } from 'graphql-subscriptions/dist/pubsub-engine';
 import {
   RabbitMqConnectionFactory,
   RabbitMqPublisher,
   RabbitMqSubscriber,
   IRabbitMqConnectionConfig,
 } from '@groundmuffin/rabbitmq-pub-sub';
-import { each } from 'async';
 import * as Logger from 'bunyan';
 import { createChildLogger } from './child-logger';
 import { PubSubAsyncIterator } from './pubsub-async-iterator';
@@ -18,15 +17,6 @@ export interface PubSubRabbitMQBusOptions {
 }
 
 export class AmqpPubSub implements PubSubEngine {
-
-  private consumer: any;
-  private producer: any;
-  private subscriptionMap: { [subId: number]: [string, Function] };
-  private subsRefsMap: { [trigger: string]: Array<number> };
-  private currentSubscriptionId: number;
-  private triggerTransform: TriggerTransform;
-  private unsubscribeChannel: any;
-  private logger: Logger;
 
   constructor(options: PubSubRabbitMQBusOptions = {}) {
 
@@ -43,6 +33,7 @@ export class AmqpPubSub implements PubSubEngine {
 
     this.subscriptionMap = {};
     this.subsRefsMap = {};
+    this.subsDisposerMap = {};
     this.currentSubscriptionId = 0;
   }
 
@@ -56,23 +47,26 @@ export class AmqpPubSub implements PubSubEngine {
     const triggerName: string = this.triggerTransform(trigger, options);
     const id = this.currentSubscriptionId++;
     this.subscriptionMap[id] = [triggerName, onMessage];
+
     let refs = this.subsRefsMap[triggerName];
     if (refs && refs.length > 0) {
       const newRefs = [...refs, id];
       this.subsRefsMap[triggerName] = newRefs;
       this.logger.trace("subscriber exist, adding triggerName '%s' to saved list.", triggerName);
       return Promise.resolve(id);
+
     } else {
       return new Promise<number>((resolve, reject) => {
         this.logger.trace("trying to subscribe to queue '%s'", triggerName);
         this.consumer.subscribe(triggerName, (msg) => this.onMessage(triggerName, msg))
           .then(disposer => {
-            this.subsRefsMap[triggerName] = [...(this.subsRefsMap[triggerName] || []), id];
-            this.unsubscribeChannel = disposer;
-            return resolve(id);
-          }).catch(err => {
-            this.logger.error(err, "failed to recieve message from queue '%s'", triggerName);
-            reject(id);
+              this.subsRefsMap[triggerName] = [...(refs || []), id];
+              this.subsDisposerMap[triggerName] = disposer;
+              return resolve(id);
+          })
+          .catch(err => {
+              this.logger.error(err, "failed to recieve message from queue '%s'", triggerName);
+              reject(id);
           });
       });
     }
@@ -120,19 +114,20 @@ export class AmqpPubSub implements PubSubEngine {
     let newRefs;
     if (refs.length === 1) {
       newRefs = [];
-      this.unsubscribeChannel().then(() => {
+      const disposer = this.subsDisposerMap[triggerName];
+      disposer().then(() => {
         this.logger.trace("cancelled channel from subscribing to queue '%s'", triggerName);
+        delete this.subsRefsMap[triggerName];
       }).catch(err => {
         this.logger.error(err, "channel cancellation failed from queue '%j'", triggerName);
       });
     } else {
       const index = refs.indexOf(subId);
-      if (index !== -1) {
-        newRefs = [...refs.slice(0, index), ...refs.slice(index + 1)];
-      }
+      const newRefs = index === -1 ? refs : [...refs.slice(0, index), ...refs.slice(index + 1)];
+      this.subsRefsMap[triggerName] = newRefs;
+      
       this.logger.trace("removing triggerName from listening '%s' ", triggerName);
     }
-    this.subsRefsMap[triggerName] = newRefs;
     delete this.subscriptionMap[subId];
     this.logger.trace("list of subscriptions still available '(%j)'", this.subscriptionMap);
   }
@@ -141,6 +136,14 @@ export class AmqpPubSub implements PubSubEngine {
 		return new PubSubAsyncIterator<T>(this, triggers, options);
 	}
 
+  public getSubscriber(): RabbitMqSubscriber {
+    return this.consumer;
+  }
+
+  public getPublisher(): RabbitMqPublisher {
+    return this.producer;
+  }
+  
   private onMessage(channel: string, message: string) {
     const subscribers = this.subsRefsMap[channel];
 
@@ -151,13 +154,30 @@ export class AmqpPubSub implements PubSubEngine {
 
     this.logger.trace("sending message to subscriber callback function '(%j)'", message);
 
-    each(subscribers, (subId, cb) => {
-      // TODO Support pattern based subscriptions
-      const [triggerName, listener] = this.subscriptionMap[subId];
-      listener(message);
-      cb();
-    });
+    let parsedMessage;
+    try {
+      parsedMessage = JSON.parse(message);
+    } catch (e) {
+      parsedMessage = message;
+    }
+
+    for (const subId of subscribers) {
+      const listener = this.subscriptionMap[subId][1];
+      listener(parsedMessage);
+    }
   }
+
+  private triggerTransform: TriggerTransform;
+  private consumer: RabbitMqSubscriber;
+  private producer: RabbitMqPublisher;
+
+  private subscriptionMap: { [subId: number]: [string, Function] };
+  private subsRefsMap: { [trigger: string]: Array<number> };
+  private subsDisposerMap: { [trigger: string]: Function };
+
+  private currentSubscriptionId: number;
+  
+  private logger: Logger;
 }
 
 export type Path = Array<string | number>;
