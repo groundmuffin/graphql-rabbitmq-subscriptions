@@ -31,9 +31,10 @@
     "prepublish": "npm run integration"
   },
   "dependencies": {
+    "@groundmuffin/rabbitmq-pub-sub": "^0.2.9",
     "@types/bunyan": "^1.8.0",
-    "@groundmuffin/rabbitmq-pub-sub": "^0.2.6"
-    "graphql-subscriptions": "^0.4.4"
+    "graphql-subscriptions": "^0.4.4",
+    "iterall": "^1.1.1"
   },
   "devDependencies": {
     "@cdm-logger/server": "^3.0.1",
