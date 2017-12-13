@@ -102,9 +102,9 @@ export class AmqpPubSub implements PubSubEngine {
     this.logger.trace("list of subscriptions still available '(%j)'", this.subscriptionMap);
   }
 
-  public asyncIterator<T>(triggers: string | string[], options?: Object): AsyncIterator<T> {
-    return new PubSubAsyncIterator<T>(this, triggers, options);
-  }
+	public asyncIterator<T>(triggers: string | string[], options: any): AsyncIterator<T> {
+		return new PubSubAsyncIterator<T>(this, triggers, options);
+	}
 
   public getSubscriber(): RabbitMqSubscriber {
     return this.consumer;
