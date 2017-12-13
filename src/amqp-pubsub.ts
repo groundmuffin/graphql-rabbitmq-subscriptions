@@ -4,7 +4,7 @@ import {
   RabbitMqPublisher,
   RabbitMqSubscriber,
   IRabbitMqConnectionConfig,
-} from '@groundmuffin/rabbitmq-pub-sub';
+} from 'rabbitmq-pub-sub';
 import { each } from 'async';
 import * as Logger from 'bunyan';
 import { createChildLogger } from './child-logger';
@@ -77,36 +77,6 @@ export class AmqpPubSub implements PubSubEngine {
       });
     }
   }
-
-	public _subscribe(trigger: string, onMessage: Function, options?: Object): Promise<number> {
-		const triggerName: string = this.triggerTransform(trigger, options);
-		const id = this.currentSubscriptionId++;
-		this.subscriptionMap[id] = [triggerName, onMessage];
-		let refs = this.subsRefsMap[triggerName];
-		if (refs && refs.length > 0) {
-			const newRefs = [...refs, id];
-			this.subsRefsMap[triggerName] = newRefs;
-			this.logger.trace("subscriber exist, adding triggerName '%s' to saved list.", triggerName);
-			return Promise.resolve(id);
-		} else {
-			return new Promise<any>((resolve, reject) => {
-				this.logger.trace("trying to subscribe to queue '%s'", triggerName);
-				this.consumer._subscribe(triggerName, (msg) => this.onMessage(triggerName, msg))
-					.then(({disposer, channel}) => {
-						this.subsRefsMap[triggerName] = [...(this.subsRefsMap[triggerName] || []), id];
-						this.unsubscribeChannel = disposer;
-						// return resolve(id);
-						return resolve({
-							id: id,
-							channel: channel
-						});
-					}).catch(err => {
-					this.logger.error(err, "failed to recieve message from queue '%s'", triggerName);
-					reject(id);
-				});
-			});
-		}
-	}
 
   public unsubscribe(subId: number) {
     const [triggerName = null] = this.subscriptionMap[subId] || [];
