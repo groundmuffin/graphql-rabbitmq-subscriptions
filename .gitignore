@@ -4,4 +4,3 @@ dist
 coverage
 typings
 npm-debug.log
-package-lock.json

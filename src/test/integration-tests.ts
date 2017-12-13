@@ -4,7 +4,7 @@ import { ConsoleLogger } from '@cdm-logger/server';
 import {
   IRabbitMqConnectionConfig,
   RabbitMqConnectionFactory,
-} from '@groundmuffin/rabbitmq-pub-sub';
+} from 'rabbitmq-pub-sub';
 
 import {
   GraphQLSchema,
