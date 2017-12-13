@@ -88,18 +88,14 @@ export class AmqpPubSub implements PubSubEngine {
     let newRefs;
     if (refs.length === 1) {
       newRefs = [];
-      const {disposer, channel} = this.subsConnectionMap[triggerName];
-      disposer()
-        .then(() => {
-          this.logger.trace("cancelled channel from subscribing to queue '%s'", triggerName);
-          delete this.subsRefsMap[triggerName];
-
-          delete this.subsConnectionMap[triggerName];
-          channel.connection.close();
-        })
-        .catch(err => {
-          this.logger.error(err, "channel cancellation failed from queue '%j'", triggerName);
-        });
+      const disposer = this.subsConnectionMap[triggerName].disposer;
+      disposer().then(() => {
+        this.logger.trace("cancelled channel from subscribing to queue '%s'", triggerName);
+        delete this.subsRefsMap[triggerName];
+        delete this.subsConnectionMap[triggerName];
+      }).catch(err => {
+        this.logger.error(err, "channel cancellation failed from queue '%j'", triggerName);
+      });
     } else {
       const index = refs.indexOf(subId);
       const newRefs = index === -1 ? refs : [...refs.slice(0, index), ...refs.slice(index + 1)];
