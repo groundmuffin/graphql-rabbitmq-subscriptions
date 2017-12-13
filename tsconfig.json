@@ -14,10 +14,10 @@
     "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
     "pretty": true,
-    "lib": [
-      "es6",
-      "esnext"
-    ]
+            "lib": [
+            "es6",
+            "esnext"
+        ]
   },
   "exclude": [
     "node_modules",
