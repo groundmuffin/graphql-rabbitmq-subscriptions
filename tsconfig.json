@@ -15,8 +15,8 @@
     "allowSyntheticDefaultImports": true,
     "pretty": true,
             "lib": [
-            "es6",
-            "esnext"
+            "es2015",
+            "es5"
         ]
   },
   "exclude": [

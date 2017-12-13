@@ -8,7 +8,6 @@ import {
 import { each } from 'async';
 import * as Logger from 'bunyan';
 import { createChildLogger } from './child-logger';
-import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubRabbitMQBusOptions {
   config?: IRabbitMqConnectionConfig;
@@ -106,10 +105,6 @@ export class AmqpPubSub implements PubSubEngine {
     delete this.subscriptionMap[subId];
     this.logger.trace("list of subscriptions still available '(%j)'", this.subscriptionMap);
   }
-
-	public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
-		return new PubSubAsyncIterator<T>(this, triggers);
-	}
 
   private onMessage(channel: string, message: string) {
     const subscribers = this.subsRefsMap[channel];
