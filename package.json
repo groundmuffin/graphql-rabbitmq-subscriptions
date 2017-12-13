@@ -1,6 +1,6 @@
 {
   "name": "@groundmuffin/graphql-rabbitmq-subscriptions",
-  "version": "1.0.22",
+  "version": "1.0.21",
   "description": "A graphql-subscriptions PubSub Engine using RabbitMQ",
   "main": "dist/index.js",
   "repository": {
@@ -31,7 +31,7 @@
     "prepublish": "npm run integration"
   },
   "dependencies": {
-    "@groundmuffin/rabbitmq-pub-sub": "^0.2.15",
+    "@groundmuffin/rabbitmq-pub-sub": "^0.2.13",
     "@types/bunyan": "^1.8.0",
     "graphql-subscriptions": "^0.4.4",
     "iterall": "^1.1.1"
