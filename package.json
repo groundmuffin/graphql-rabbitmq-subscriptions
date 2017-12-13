@@ -1,6 +1,6 @@
 {
   "name": "@groundmuffin/graphql-rabbitmq-subscriptions",
-  "version": "1.0.20",
+  "version": "1.0.14",
   "description": "A graphql-subscriptions PubSub Engine using RabbitMQ",
   "main": "dist/index.js",
   "repository": {
@@ -31,7 +31,7 @@
     "prepublish": "npm run integration"
   },
   "dependencies": {
-    "@groundmuffin/rabbitmq-pub-sub": "^0.2.13",
+    "@groundmuffin/rabbitmq-pub-sub": "^0.2.12",
     "@types/bunyan": "^1.8.0",
     "graphql-subscriptions": "^0.4.4",
     "iterall": "^1.1.1"
@@ -39,11 +39,11 @@
   "devDependencies": {
     "@cdm-logger/server": "^3.0.1",
     "@types/amqplib": "^0.5.1",
-    "@types/bluebird": "^3.5.11",
+    "@types/bluebird": "^3.0.37",
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
-    "@types/graphql": "^0.10.0",
-    "@types/mocha": "^2.2.43",
+    "@types/graphql": "^0.11.1",
+    "@types/mocha": "^2.2.39",
     "@types/node": "7.0.5",
     "@types/promises-a-plus": "^0.0.27",
     "@types/simple-mock": "0.0.27",
@@ -59,9 +59,9 @@
     "bluebird": "^3.4.7",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
-    "graphql": "^0.10.0",
+    "graphql": "^0.10.1",
     "istanbul": "1.0.0-alpha.2",
-    "mocha": "^3.5.3",
+    "mocha": "^3.0.0",
     "remap-istanbul": "^0.8.4",
     "simple-mock": "^0.7.0",
     "tslint": "^4.4.2",
