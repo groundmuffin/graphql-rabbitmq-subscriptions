@@ -1,10 +1,11 @@
-import { PubSubEngine } from 'graphql-subscriptions/dist/pubsub';
+import { PubSubEngine } from 'graphql-subscriptions/dist/pubsub-engine';
+import { PubSubAsyncIterator } from './pubsub-async-iterator';
 import {
-  RabbitMqConnectionFactory,
+  RabbitMqSingletonConnectionFactory,
   RabbitMqPublisher,
   RabbitMqSubscriber,
   IRabbitMqConnectionConfig,
-} from 'rabbitmq-pub-sub';
+} from '@groundmuffin/rabbitmq-pub-sub';
 import { each } from 'async';
 import * as Logger from 'bunyan';
 import { createChildLogger } from './child-logger';
@@ -22,6 +23,7 @@ export class AmqpPubSub implements PubSubEngine {
   private producer: any;
   private subscriptionMap: { [subId: number]: [string, Function] };
   private subsRefsMap: { [trigger: string]: Array<number> };
+  private subsConnectionMap: { [trigger: string]: any };
   private currentSubscriptionId: number;
   private triggerTransform: TriggerTransform;
   private unsubscribeChannel: any;
@@ -35,13 +37,14 @@ export class AmqpPubSub implements PubSubEngine {
 
     this.logger = createChildLogger(logger, 'AmqpPubSub');
 
-    const factory = new RabbitMqConnectionFactory(logger, config);
+    const factory = new RabbitMqSingletonConnectionFactory(logger, config);
 
     this.consumer = new RabbitMqSubscriber(logger, factory);
     this.producer = new RabbitMqPublisher(logger, factory);
 
     this.subscriptionMap = {};
     this.subsRefsMap = {};
+    this.subsConnectionMap = {};
     this.currentSubscriptionId = 0;
   }
 
@@ -64,10 +67,14 @@ export class AmqpPubSub implements PubSubEngine {
     } else {
       return new Promise<number>((resolve, reject) => {
         this.logger.trace("trying to subscribe to queue '%s'", triggerName);
-        this.consumer.subscribe(triggerName, (msg) => this.onMessage(triggerName, msg))
-          .then(disposer => {
+        this.consumer._subscribe(triggerName, (msg) => this.onMessage(triggerName, msg))
+        .then(({disposer, subscription: {channel, queueConfig}}) => {
             this.subsRefsMap[triggerName] = [...(this.subsRefsMap[triggerName] || []), id];
-            this.unsubscribeChannel = disposer;
+            this.subsConnectionMap[triggerName] = {
+              disposer,
+              channel,
+              queueConfig
+            };
             return resolve(id);
           }).catch(err => {
             this.logger.error(err, "failed to recieve message from queue '%s'", triggerName);
@@ -80,16 +87,24 @@ export class AmqpPubSub implements PubSubEngine {
   public unsubscribe(subId: number) {
     const [triggerName = null] = this.subscriptionMap[subId] || [];
     const refs = this.subsRefsMap[triggerName];
+    const connectionInfo = this.subsConnectionMap[triggerName];
 
     if (!refs) {
       this.logger.error("There is no subscription of id '%s'", subId);
       throw new Error(`There is no subscription of id "{subId}"`);
     }
 
+    if (!(connectionInfo && typeof connectionInfo.disposer === 'function')) {
+      this.logger.error("There is no connectionInfo or disposer of id '%s'", subId);
+      throw new Error(`There is no connectionInfo or disposer of id "{subId}"`);
+    }
+
     let newRefs;
     if (refs.length === 1) {
       newRefs = [];
-      this.unsubscribeChannel().then(() => {
+      const disposer = this.subsConnectionMap[triggerName].disposer;
+      disposer().then(() => {
+        delete this.subsConnectionMap[triggerName];
         this.logger.trace("cancelled channel from subscribing to queue '%s'", triggerName);
       }).catch(err => {
         this.logger.error(err, "channel cancellation failed from queue '%j'", triggerName);
@@ -104,6 +119,10 @@ export class AmqpPubSub implements PubSubEngine {
     this.subsRefsMap[triggerName] = newRefs;
     delete this.subscriptionMap[subId];
     this.logger.trace("list of subscriptions still available '(%j)'", this.subscriptionMap);
+  }
+
+  public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
+    return new PubSubAsyncIterator<T>(this, triggers);
   }
 
   private onMessage(channel: string, message: string) {
