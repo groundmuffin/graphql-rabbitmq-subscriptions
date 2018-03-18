@@ -46,17 +46,18 @@
     "testRegex": "/__tests__/.*test*\\.(ts|tsx|js)$"
   },
   "dependencies": {
-    "@groundmuffin/rabbitmq-pub-sub": "^0.2.23",
-    "@types/bunyan": "^1.8.0",
+    "@groundmuffin/rabbitmq-pub-sub": "^0.2.24",
+    "@types/bunyan": "^1.8.4",
     "async": "^2.5.0",
     "graphql-subscriptions": "^0.4.4"
   },
   "devDependencies": {
-    "@types/amqplib": "^0.5.1",
-    "@types/bluebird": "^3.0.37",
+    "@cdm-logger/server": "^3.0.2",
+    "@types/amqplib": "^0.5.7",
+    "@types/bluebird": "^3.5.20",
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
-    "@types/mocha": "^2.2.39",
+    "@types/mocha": "^2.2.48",
     "@types/node": "7.0.5",
     "@types/promises-a-plus": "^0.0.27",
     "@types/simple-mock": "0.0.27",
@@ -70,7 +71,6 @@
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-stage-0": "^6.3.13",
     "bluebird": "^3.4.7",
-    "@cdm-logger/server": "^3.0.2",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "graphql": "^0.10.5",
@@ -79,7 +79,7 @@
     "remap-istanbul": "^0.8.4",
     "simple-mock": "^0.7.0",
     "tslint": "^4.4.2",
-    "typescript": "^2.3.4"
+    "typescript": "^2.7.2"
   },
   "typings": "dist/index.d.ts",
   "typescript": {
