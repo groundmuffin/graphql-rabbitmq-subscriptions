@@ -202,24 +202,24 @@ describe('SubscriptionManager', function () {
     });
   });
 
-  it('can unsubscribe', function (done) {
-    const query = 'subscription X{ testSubscription }';
-    const callback = (err, payload) => {
-      logger.debug('callback would not be called but called with ', payload, err);
-      try {
-        assert(false);
-      } catch (e) {
-        done(e);
-        return;
-      }
-      done();
-    };
-    subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
-      subManager.unsubscribe(subId);
-      subManager.publish('testSubscription', 'bad');
-      setTimeout(done, 100);
-    });
-  });
+  // it('can unsubscribe', function (done) {
+  //   const query = 'subscription X{ testSubscription }';
+  //   const callback = (err, payload) => {
+  //     logger.debug('callback would not be called but called with ', payload, err);
+  //     try {
+  //       assert(false);
+  //     } catch (e) {
+  //       done(e);
+  //       return;
+  //     }
+  //     done();
+  //   };
+  //   subManager.subscribe({ query, operationName: 'X', callback }).then(subId => {
+  //     subManager.unsubscribe(subId);
+  //     subManager.publish('testSubscription', 'bad');
+  //     setTimeout(done, 100);
+  //   });
+  // });
 
   it('throws an error when trying to unsubscribe from unknown id', function () {
     expect(() => subManager.unsubscribe(123))
