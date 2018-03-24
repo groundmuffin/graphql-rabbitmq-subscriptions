@@ -102,11 +102,11 @@ export class AmqpPubSub implements PubSubEngine {
     let newRefs;
     if (refs.length === 1) {
       newRefs = [];
-      const disposer = this.subsConnectionMap[triggerName].disposer;
-      disposer().then(() => {
+      connectionInfo.disposer().then(() => {
         delete this.subsConnectionMap[triggerName];
         this.logger.trace("cancelled channel from subscribing to queue '%s'", triggerName);
       }).catch(err => {
+        delete this.subsConnectionMap[triggerName];
         this.logger.error(err, "channel cancellation failed from queue '%j'", triggerName);
       });
     } else {
